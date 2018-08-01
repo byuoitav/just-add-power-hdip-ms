@@ -2,8 +2,10 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/just-add-power-hdip-ms/handlers"
 	"github.com/jessemillar/health"
 	"github.com/labstack/echo"
@@ -18,6 +20,8 @@ func main() {
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
 
+	log.L.Debugf("Local environment %v", os.Getenv("LOCAL_ENVIRONMENT"))
+
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
@@ -28,7 +32,7 @@ func main() {
 	secure.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
 
 	//Status endpoints
-	secure.GET("/input/get/:receiver", handlers.GetRecieverTrasmissionChannel)
+	secure.GET("/input/get/:address", handlers.GetTransmissionChannel)
 
 	//Configuration endpoints
 	secure.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
