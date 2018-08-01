@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,6 +18,11 @@ import (
 //JustAddPowerChannelResult type for result
 type JustAddPowerChannelResult struct {
 	Data string `json:"data"`
+}
+
+//JustAddPowerChannelIntResult type for result
+type JustAddPowerChannelIntResult struct {
+	Data int `json:"data"`
 }
 
 //SetReceiverToTransmissionChannel change inputs
@@ -34,16 +40,23 @@ func SetReceiverToTransmissionChannel(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when resolving IP Address ["+transmitter+"]"))
 	}
 
-	channel := string(ipAddress.IP[3])
+	channel := fmt.Sprintf("%v", ipAddress.IP[15])
 
 	log.L.Debugf("Channel %v", channel)
 
-	result, err := justAddPowerRequest("http://"+receiver+"/cgi-bin/api/command/channel", channel, "POST")
+	result, errrr := justAddPowerRequest("http://"+receiver+"/cgi-bin/api/command/channel", channel, "POST")
 
-	log.L.Debugf("Result %v", result)
+	if errrr != nil {
+		return context.JSON(http.StatusInternalServerError, errrr)
+	}
+
+	var jsonResult JustAddPowerChannelResult
+	err = json.Unmarshal(result, &jsonResult)
+
+	log.L.Debugf("Result %v", jsonResult)
 
 	if err != nil {
-		return context.JSON(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when unpacking json"))
 	} else {
 		return context.JSON(http.StatusOK, status.Input{Input: transmitter})
 	}
@@ -60,18 +73,29 @@ func GetTransmissionChannel(context echo.Context) error {
 
 	ipAddress, err := net.ResolveIPAddr("ip", address)
 
+	log.L.Debugf("%+v", ipAddress.IP)
+
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when resolving IP Address ["+address+"]"))
 	}
 
-	result, err := justAddPowerRequest("http://"+address+"/cgi-bin/api/details/channel", "", "GET")
+	result, errrrrr := justAddPowerRequest("http://"+address+"/cgi-bin/api/details/channel", "", "GET")
 
-	log.L.Debugf("Result %v", result)
+	if errrrrr != nil {
+		log.L.Debugf("%v", err)
+		return context.JSON(http.StatusInternalServerError, errrrrr.Error())
+	}
 
-	transmissionChannel := string(ipAddress.IP[0]) + "." + string(ipAddress.IP[1]) + "." + string(ipAddress.IP[2]) + "." + result.Data
+	var jsonResult JustAddPowerChannelIntResult
+	err = json.Unmarshal(result, &jsonResult)
+
+	log.L.Debugf("Result %s %v", result, jsonResult)
+
+	transmissionChannel := fmt.Sprintf("%v.%v.%v.%v",
+		ipAddress.IP[12], ipAddress.IP[13], ipAddress.IP[14], jsonResult.Data)
 
 	if err != nil {
-		return context.JSON(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when unpacking json"))
 	} else {
 		return context.JSON(http.StatusOK, status.Input{Input: transmissionChannel})
 	}
@@ -93,7 +117,7 @@ func SetTransmitterChannel(context echo.Context) error {
 
 	log.L.Debugf("Setting transmitter channel %v", transmitter)
 
-	channel := string(ipAddress.IP[3])
+	channel := string(ipAddress.IP[15])
 
 	result, err := justAddPowerRequest("http://"+transmitter+"/cgi-bin/api/command/channel", channel, "POST")
 
@@ -106,13 +130,12 @@ func SetTransmitterChannel(context echo.Context) error {
 	}
 }
 
-func justAddPowerRequest(url string, body string, method string) (JustAddPowerChannelResult, *nerr.E) {
-	var retValue JustAddPowerChannelResult
+func justAddPowerRequest(url string, body string, method string) ([]byte, *nerr.E) {
 
 	var netRequest, err = http.NewRequest(method, url, bytes.NewReader([]byte(body)))
 
 	if err != nil {
-		return retValue, nerr.Translate(err).Addf("Error when creating new just add power netrequest")
+		return nil, nerr.Translate(err).Addf("Error when creating new just add power netrequest")
 	}
 
 	var netClient = http.Client{
@@ -122,7 +145,7 @@ func justAddPowerRequest(url string, body string, method string) (JustAddPowerCh
 	response, err := netClient.Do(netRequest)
 
 	if err != nil {
-		return retValue, nerr.Translate(err).Addf("Error when posting to Just add power device")
+		return nil, nerr.Translate(err).Addf("Error when posting to Just add power device")
 	}
 
 	defer response.Body.Close()
@@ -130,18 +153,12 @@ func justAddPowerRequest(url string, body string, method string) (JustAddPowerCh
 	bytes, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		return retValue, nerr.Translate(err).Addf("Error when reading Just add power device response body")
-	}
-
-	err = json.Unmarshal(bytes, &retValue)
-
-	if err != nil {
-		return retValue, nerr.Translate(err).Addf("Unable to unpackage Just add power device response body")
+		return nil, nerr.Translate(err).Addf("Error when reading Just add power device response body")
 	}
 
 	if response.StatusCode/100 != 2 {
-		return retValue, nerr.Create("Just add power device did not return HTTP OK", "BadResponse")
+		return bytes, nerr.Create("Just add power device did not return HTTP OK", "BadResponse")
 	}
 
-	return retValue, nil
+	return bytes, nil
 }
