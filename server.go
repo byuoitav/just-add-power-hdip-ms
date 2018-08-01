@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common/health"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/just-add-power-hdip-ms/handlers"
-	"github.com/jessemillar/health"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
@@ -25,7 +25,7 @@ func main() {
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
-	secure.GET("/health", echo.WrapHandler(http.HandlerFunc(health.Check)))
+	secure.GET("/health", health.HealthCheck)
 	secure.GET("/mstatus", GetStatus)
 
 	//Functionality endpoints
@@ -36,6 +36,9 @@ func main() {
 
 	//Configuration endpoints
 	secure.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
+
+	secure.PUT("/log-level/:level", log.SetLogLevel)
+	secure.GET("/log-level", log.GetLogLevel)
 
 	server := http.Server{
 		Addr:           port,
