@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/common/health"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/just-add-power-hdip-ms/handlers"
@@ -22,24 +21,24 @@ func main() {
 
 	log.L.Debugf("Tied to a room system: %v", os.Getenv("ROOM_SYSTEM"))
 
-	// Use the `secure` routing group to require authentication
-	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+	// Use the `router` routing group to require authentication
+	//router := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
-	secure.GET("/health", health.HealthCheck)
-	secure.GET("/mstatus", GetStatus)
-	secure.GET("/status", GetStatus)
+	router.GET("/health", health.HealthCheck)
+	router.GET("/mstatus", GetStatus)
+	router.GET("/status", GetStatus)
 
 	//Functionality endpoints
-	secure.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
+	router.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
 
 	//Status endpoints
-	secure.GET("/input/get/:address", handlers.GetTransmissionChannel)
+	router.GET("/input/get/:address", handlers.GetTransmissionChannel)
 
 	//Configuration endpoints
-	secure.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
+	router.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
 
-	secure.PUT("/log-level/:level", log.SetLogLevel)
-	secure.GET("/log-level", log.GetLogLevel)
+	router.PUT("/log-level/:level", log.SetLogLevel)
+	router.GET("/log-level", log.GetLogLevel)
 
 	server := http.Server{
 		Addr:           port,
