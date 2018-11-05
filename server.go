@@ -20,13 +20,14 @@ func main() {
 	router.Pre(middleware.RemoveTrailingSlash())
 	router.Use(middleware.CORS())
 
-	log.L.Debugf("Local environment %v", os.Getenv("LOCAL_ENVIRONMENT"))
+	log.L.Debugf("Tied to a room system: %v", os.Getenv("ROOM_SYSTEM"))
 
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	secure.GET("/health", health.HealthCheck)
 	secure.GET("/mstatus", GetStatus)
+	secure.GET("/status", GetStatus)
 
 	//Functionality endpoints
 	secure.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
