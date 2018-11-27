@@ -6,6 +6,7 @@ import (
 
 	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/just-add-power-hdip-ms/handlers"
 )
 
@@ -15,20 +16,17 @@ func main() {
 
 	log.L.Debugf("Tied to a room system: %v", os.Getenv("ROOM_SYSTEM"))
 
-	// Use the `router` routing group to require authentication
-	//router := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
+	write := router.Group("", auth.AuthorizeRequest("write-state", "room", auth.LookupResourceFromAddress))
+	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
 
 	//Functionality endpoints
-	router.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
+	write.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
 
 	//Status endpoints
-	router.GET("/input/get/:address", handlers.GetTransmissionChannel)
+	read.GET("/input/get/:address", handlers.GetTransmissionChannel)
 
 	//Configuration endpoints
-	router.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
-
-	router.PUT("/log-level/:level", log.SetLogLevel)
-	router.GET("/log-level", log.GetLogLevel)
+	write.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
 
 	server := http.Server{
 		Addr:           port,

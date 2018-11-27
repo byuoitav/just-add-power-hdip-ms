@@ -12,7 +12,6 @@ import (
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/status"
-	"github.com/byuoitav/common/v2/auth"
 	"github.com/labstack/echo"
 )
 
@@ -28,13 +27,6 @@ type JustAddPowerChannelIntResult struct {
 
 //SetReceiverToTransmissionChannel change inputs
 func SetReceiverToTransmissionChannel(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
-
 	log.L.Debugf("Setting receiver to transmitter")
 
 	transmitter := context.Param("transmitter")
@@ -89,13 +81,6 @@ func CheckTransmitterChannel(address string) {
 
 //GetTransmissionChannel retrieves the transmission channel for a just add power device
 func GetTransmissionChannel(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "read-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
-
 	log.L.Debugf("Getting trasnmission channel")
 
 	address := context.Param("address")
@@ -142,13 +127,6 @@ func GetTransmissionChannelforAddress(address string) (string, *nerr.E) {
 
 //SetTransmitterChannel sets the transmission channel for a just add power device
 func SetTransmitterChannel(context echo.Context) error {
-	if ok, err := auth.CheckAuthForLocalEndpoints(context, "write-state"); !ok {
-		if err != nil {
-			log.L.Warnf("Problem getting auth: %v", err.Error())
-		}
-		return context.String(http.StatusUnauthorized, "unauthorized")
-	}
-
 	log.L.Debugf("Setting transmitter channel")
 
 	transmitter := context.Param("transmitter")
