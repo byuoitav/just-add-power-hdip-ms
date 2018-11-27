@@ -1,0 +1,12 @@
+{
+    "name": "just-add-power-hdip-ms",
+    "port": ":8022",
+    "env-vars": [
+        "BYPASS_AUTH",
+        "ENDPOINT_ACCESS_KEY",
+        "ENDPOINT_AUTHORIZATION_URL",
+        "ENDPOINT_USERNAME",
+        "ROOM_SYSTEM",
+        "SYSTEM_ID"
+    ]
+}
