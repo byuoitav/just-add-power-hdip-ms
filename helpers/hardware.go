@@ -89,10 +89,10 @@ func GetDeviceSignal(address string) (structs.ActiveSignal, *nerr.E) {
 		return signalStatus, err
 	}
 
-	if jsonResult.Data.Status != "Starting Services" || jsonResult.Data.Status != "Streaming Video" || jsonResult.Data.Status != "Decoding Video" {
-		signalStatus.Active = false
-	} else {
+	if jsonResult.Data.Status == "Starting Services" || jsonResult.Data.Status == "Streaming Video" || jsonResult.Data.Status == "Decoding Video" {
 		signalStatus.Active = true
+	} else {
+		signalStatus.Active = false
 	}
 
 	return signalStatus, nil
