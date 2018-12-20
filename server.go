@@ -24,6 +24,8 @@ func main() {
 
 	//Status endpoints
 	read.GET("/input/get/:address", handlers.GetTransmissionChannel)
+	read.GET("/:address/hardware", handlers.JustGetDetailsDevice)
+	read.GET("/:address/signal", handlers.JustGetSignal)
 
 	//Configuration endpoints
 	write.PUT("/configure/:transmitter", handlers.SetTransmitterChannel)
