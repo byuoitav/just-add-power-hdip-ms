@@ -1,17 +1,15 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/status"
+	"github.com/byuoitav/just-add-power-hdip-ms/helpers"
 	"github.com/labstack/echo"
 )
 
@@ -46,7 +44,7 @@ func SetReceiverToTransmissionChannel(context echo.Context) error {
 
 	log.L.Debugf("Channel %v", channel)
 
-	result, errrr := justAddPowerRequest("http://"+receiver+"/cgi-bin/api/command/channel", channel, "POST")
+	result, errrr := helpers.JustAddPowerRequest("http://"+receiver+"/cgi-bin/api/command/channel", channel, "POST")
 
 	if errrr != nil {
 		return context.JSON(http.StatusInternalServerError, errrr)
@@ -76,7 +74,7 @@ func CheckTransmitterChannel(address string) {
 		}
 	}
 
-	SetTransmitterChannelForAddress(address)
+	helpers.SetTransmitterChannelForAddress(address)
 }
 
 //GetTransmissionChannel retrieves the transmission channel for a just add power device
@@ -107,7 +105,7 @@ func GetTransmissionChannelforAddress(address string) (string, *nerr.E) {
 		return "", nerr.Translate(err).Addf("Error when resolving IP Address [" + address + "]")
 	}
 
-	result, errrrrr := justAddPowerRequest("http://"+address+"/cgi-bin/api/details/channel", "", "GET")
+	result, errrrrr := helpers.JustAddPowerRequest("http://"+address+"/cgi-bin/api/details/channel", "", "GET")
 
 	if errrrrr != nil {
 		log.L.Debugf("%v", err)
@@ -131,7 +129,7 @@ func SetTransmitterChannel(context echo.Context) error {
 
 	transmitter := context.Param("transmitter")
 
-	_, err := SetTransmitterChannelForAddress(transmitter)
+	_, err := helpers.SetTransmitterChannelForAddress(transmitter)
 
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, err.Error())
@@ -141,57 +139,30 @@ func SetTransmitterChannel(context echo.Context) error {
 
 }
 
-func SetTransmitterChannelForAddress(transmitter string) (string, *nerr.E) {
-	ipAddress, err := net.ResolveIPAddr("ip", transmitter)
+// JustGetDetailsDevice gets the device details which is used in the hardware stuff.
+func JustGetDetailsDevice(context echo.Context) error {
+	log.L.Infof("In justGetDeviceDetails")
 
+	address := context.Param("address")
+
+	result, err := helpers.GetDeviceDetails(address)
 	if err != nil {
-		return "", nerr.Translate(err).Addf("Error when resolving IP Address [" + transmitter + "]")
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	log.L.Debugf("Setting transmitter channel %v", transmitter)
-
-	channel := string(ipAddress.IP[15])
-
-	result, err := justAddPowerRequest("http://"+transmitter+"/cgi-bin/api/command/channel", channel, "POST")
-
-	log.L.Debugf("Result %v", result)
-
-	if err != nil {
-		return "", nerr.Translate(err)
-	} else {
-		return "ok", nil
-	}
+	return context.JSON(http.StatusOK, result)
 }
 
-func justAddPowerRequest(url string, body string, method string) ([]byte, *nerr.E) {
+// JustGetSignal gets the signal data from the device
+func JustGetSignal(context echo.Context) error {
+	log.L.Infof("In justGetDetails")
 
-	var netRequest, err = http.NewRequest(method, url, bytes.NewReader([]byte(body)))
+	address := context.Param("address")
 
+	result, err := helpers.GetDeviceSignal(address)
 	if err != nil {
-		return nil, nerr.Translate(err).Addf("Error when creating new just add power netrequest")
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	var netClient = http.Client{
-		Timeout: time.Second * 10,
-	}
-
-	response, err := netClient.Do(netRequest)
-
-	if err != nil {
-		return nil, nerr.Translate(err).Addf("Error when posting to Just add power device")
-	}
-
-	defer response.Body.Close()
-
-	bytes, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		return nil, nerr.Translate(err).Addf("Error when reading Just add power device response body")
-	}
-
-	if response.StatusCode/100 != 2 {
-		return bytes, nerr.Create("Just add power device did not return HTTP OK", "BadResponse")
-	}
-
-	return bytes, nil
+	return context.JSON(http.StatusOK, result)
 }
