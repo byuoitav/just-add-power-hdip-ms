@@ -40,7 +40,7 @@ func SetReceiverToTransmissionChannel(context echo.Context) error {
 		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when resolving IP Address ["+transmitter+"]"))
 	}
 
-	channel := fmt.Sprintf("%v", ipAddress.IP[15])
+	channel := fmt.Sprintf("%v", ipAddress.IP[3])
 
 	log.L.Debugf("Channel %v", channel)
 
@@ -68,7 +68,7 @@ func CheckTransmitterChannel(address string) {
 	ipAddress, err2 := net.ResolveIPAddr("ip", address)
 
 	if err == nil && err2 == nil {
-		if string(ipAddress.IP[15]) == channel {
+		if string(ipAddress.IP[3]) == channel {
 			//we're good
 			return
 		}
@@ -94,6 +94,7 @@ func GetTransmissionChannel(context echo.Context) error {
 }
 
 func GetTransmissionChannelforAddress(address string) (string, *nerr.E) {
+	log.SetLevel("debug")
 
 	log.L.Debugf("Getting transmitter channel for address %v", address)
 
@@ -116,9 +117,10 @@ func GetTransmissionChannelforAddress(address string) (string, *nerr.E) {
 	err = json.Unmarshal(result, &jsonResult)
 
 	log.L.Debugf("Result %s %v", result, jsonResult)
+	log.L.Debugf("len of IP %v", len(ipAddress.IP))
 
 	transmissionChannel := fmt.Sprintf("%v.%v.%v.%v",
-		ipAddress.IP[12], ipAddress.IP[13], ipAddress.IP[14], jsonResult.Data)
+		ipAddress.IP[0], ipAddress.IP[1], ipAddress.IP[2], jsonResult.Data)
 
 	return transmissionChannel, nil
 }

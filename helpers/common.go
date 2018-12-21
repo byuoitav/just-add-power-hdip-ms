@@ -53,7 +53,7 @@ func SetTransmitterChannelForAddress(transmitter string) (string, *nerr.E) {
 
 	log.L.Debugf("Setting transmitter channel %v", transmitter)
 
-	channel := string(ipAddress.IP[15])
+	channel := string(ipAddress.IP[3])
 
 	result, err := JustAddPowerRequest("http://"+transmitter+"/cgi-bin/api/command/channel", channel, "POST")
 
