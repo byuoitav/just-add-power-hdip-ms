@@ -49,6 +49,7 @@ func JustAddPowerRequest(url string, body string, method string) ([]byte, *nerr.
 //SetTransmitterChannelForAddress .
 func SetTransmitterChannelForAddress(transmitter string) (string, *nerr.E) {
 	ipAddress, err := net.ResolveIPAddr("ip", transmitter)
+	ipAddress.IP = ipAddress.IP.To4()
 
 	if err != nil {
 		return "", nerr.Translate(err).Addf("Error when resolving IP Address [" + transmitter + "]")

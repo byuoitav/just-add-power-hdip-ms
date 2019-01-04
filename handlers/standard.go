@@ -35,6 +35,7 @@ func SetReceiverToTransmissionChannel(context echo.Context) error {
 	log.L.Debugf("Routing %v to %v", receiver, transmitter)
 
 	ipAddress, err := net.ResolveIPAddr("ip", transmitter)
+	ipAddress.IP = ipAddress.IP.To4()
 
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, nerr.Translate(err).Addf("Error when resolving IP Address ["+transmitter+"]"))
@@ -66,6 +67,7 @@ func CheckTransmitterChannel(address string) {
 	channel, err := GetTransmissionChannelforAddress(address)
 
 	ipAddress, err2 := net.ResolveIPAddr("ip", address)
+	ipAddress.IP = ipAddress.IP.To4()
 
 	if err == nil && err2 == nil {
 		if string(ipAddress.IP[3]) == channel {
@@ -99,6 +101,7 @@ func GetTransmissionChannelforAddress(address string) (string, *nerr.E) {
 	log.L.Debugf("Getting transmitter channel for address %v", address)
 
 	ipAddress, err := net.ResolveIPAddr("ip", address)
+	ipAddress.IP = ipAddress.IP.To4()
 
 	log.L.Debugf("%+v", ipAddress.IP)
 
