@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/byuoitav/common/nerr"
 )
 
+//JustAddPowerRequest .
 func JustAddPowerRequest(url string, body string, method string) ([]byte, *nerr.E) {
 
 	var netRequest, err = http.NewRequest(method, url, bytes.NewReader([]byte(body)))
@@ -44,6 +46,7 @@ func JustAddPowerRequest(url string, body string, method string) ([]byte, *nerr.
 	return bytes, nil
 }
 
+//SetTransmitterChannelForAddress .
 func SetTransmitterChannelForAddress(transmitter string) (string, *nerr.E) {
 	ipAddress, err := net.ResolveIPAddr("ip", transmitter)
 
@@ -51,17 +54,19 @@ func SetTransmitterChannelForAddress(transmitter string) (string, *nerr.E) {
 		return "", nerr.Translate(err).Addf("Error when resolving IP Address [" + transmitter + "]")
 	}
 
-	log.L.Debugf("Setting transmitter channel %v", transmitter)
+	log.L.Debugf("Setting transmitter ipaddr %v", ipAddress)
 
-	channel := string(ipAddress.IP[3])
+	channel := fmt.Sprintf("%v", ipAddress.IP[3])
 
-	result, err := JustAddPowerRequest("http://"+transmitter+"/cgi-bin/api/command/channel", channel, "POST")
+	log.L.Debugf("Setting transmitter channel %+v", channel)
+
+	result, er := JustAddPowerRequest("http://"+transmitter+"/cgi-bin/api/command/channel", channel, "POST")
 
 	log.L.Debugf("Result %v", result)
 
-	if err != nil {
-		return "", nerr.Translate(err)
-	} else {
-		return "ok", nil
+	if er != nil {
+		return "", nerr.Translate(er)
 	}
+
+	return "ok", nil
 }
