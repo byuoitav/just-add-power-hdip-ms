@@ -13,7 +13,7 @@ import (
 func main() {
 	port := ":8022"
 	router := common.NewRouter()
-	log.SetLevel("debug")
+	//log.SetLevel("debug")
 
 	log.L.Debugf("Tied to a room system: %v", os.Getenv("ROOM_SYSTEM"))
 
