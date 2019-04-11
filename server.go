@@ -13,6 +13,7 @@ import (
 func main() {
 	port := ":8022"
 	router := common.NewRouter()
+	log.SetLevel("debug")
 
 	log.L.Debugf("Tied to a room system: %v", os.Getenv("ROOM_SYSTEM"))
 
@@ -21,6 +22,7 @@ func main() {
 
 	//Functionality endpoints
 	write.GET("/input/:transmitter/:receiver", handlers.SetReceiverToTransmissionChannel)
+	write.POST("/:address/videowall", handlers.JustSetVideoWall)
 
 	//Status endpoints
 	read.GET("/input/get/:address", handlers.GetTransmissionChannel)

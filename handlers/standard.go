@@ -171,3 +171,28 @@ func JustGetSignal(context echo.Context) error {
 
 	return context.JSON(http.StatusOK, result)
 }
+
+// JustSetVideoWall sets the video wall parameters
+func JustSetVideoWall(context echo.Context) error {
+	log.L.Infof("In JustSetVideoWall")
+
+	address := context.Param("address")
+
+	var wallParams helpers.JustAddPowerVideoWallParameters
+	err := context.Bind(&wallParams)
+	if err != nil {
+		msg := fmt.Sprintf("failed to bind request body for JustSetVideoWall : %s", err.Error())
+		log.L.Errorf("%s %s", address, msg)
+		return context.JSON(http.StatusBadRequest, err)
+	}
+
+	result, _ := helpers.SetVideoWall(address, wallParams)
+
+	// log.L.Debugf("TEST %v, %v", result, err)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, result)
+}
